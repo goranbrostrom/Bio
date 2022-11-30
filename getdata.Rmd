@@ -1,0 +1,107 @@
+---
+title: "Create survival data frame"
+author: "Göran Broström"
+date: "`r Sys.Date()`"
+output:
+  bookdown::pdf_document2:
+    citation_package: natbib
+    keep_tex: yes
+    number_sections: yes
+    toc: yes
+    toc_depth: 2
+  bookdown::html_document2:
+    number_sections: yes
+    toc: yes
+    toc_depth: 4
+    toc_float: yes
+  bookdown::word_document2:
+    toc: no
+    toc_depth: 2
+citation_package: natbib
+##classoption: titlepage
+bibliography: snus2.bib
+titlepage: no
+biblio-style: apalike
+documentclass: article
+fontsize: 11pt
+header-includes:
+- \usepackage[utf8]{inputenc}
+- \usepackage{graphicx}
+- \usepackage{sectsty}
+- \usepackage{endfloat}
+- \renewcommand{\efloatseparator}{\mbox{}}
+- \subsectionfont{\normalfont\itshape}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(eha)
+```
+
+# Introduction
+
+We are reading data from *Uttag U22003* from Cedar, containing infant mortality 
+data from Västerbotten. The original is stored in *RDS* format in the folder *Data*, 
+two files *individ* and *boende*.
+
+The goal is th create one file suitable for *survival analysis*, meaning that the
+building blocks for *episodes* are there in the form of three variables named *enter*
+(start age of episode), *exit* (end age of episode), and *event* (indicator of death).
+Key covariates are further *birthdate* and *place of birth*.
+
+# The individual file
+
+Let's call it *infant*. We first separate the data into *survivors* **(is.na(deathdate))** and
+*deaths* **(!is.na(deathdate))**, ad then we deal with the two groups separately.
+
+Finally, we merge the two sets.
+
+```{r read, individ}
+ind <- readRDS("Data/individ.rds")
+infant <- data.frame(id = ind$UTTAGSID, sex = ind$KON, 
+                     birthdate = ind$FODDAT_U, bdupd = ind$FODDAT_IND, 
+                     deathdate = ind$DODDAT_U, ddupd = ind$DODDAT_IND, 
+                     outdate = ind$BOSDAT_U, odupd = ind$BOSDAT_IND,
+                     uttyp = ind$BOSTYP)
+inf <- infant # Save a copy of the original.
+summary(infant)
+infant$birthdate <- as.Date(as.character(infant$birthdate), format = "%Y%m%d")
+infant$deathdate <- as.Date(as.character(infant$deathdate), format = "%Y%m%d")
+infant$outdate <- as.Date(as.character(infant$outdate), format = "%Y%m%d")
+infant$exit <- with(infant, as.numeric(deathdate - birthdate))
+survs <- infant[is.na(infant$deathdate), ]
+deaths <- infant[!is.na(infant$deathdate), ]
+
+```
+
+## Survivors
+
+We need to find a date *last seen* and the corresponding *exposure time*.
+
+```{r survivors}
+exp.time <- with(survs, as.numeric(outdate - birthdate))
+survs$exit <- pmin(exp.time, 365) # Note 'p'!
+survs$event <- 0
+survs$enter <- 0
+summary(exp.time)
+```
+
+## Deaths
+
+```{r deaths}
+exp.time <- with(deaths, as.numeric(deathdate - birthdate))
+deaths$exit <- exp.time
+deaths$event <- 1
+deaths$enter <- 0
+deaths <- age.window(deaths, c(0, 365))
+```
+
+# Put together and save
+
+```{r together}
+infant <- rbind(deaths, survs)
+infant <- infant[order(infant$birthdate), ]
+saveRDS(infant, file = "Rdata/infant.rds")
+summary(infant)
+```
+

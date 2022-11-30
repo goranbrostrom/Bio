@@ -1,0 +1,38 @@
+---
+title: "Read data"
+author: "Göran Broström"
+date: "2022-10-20"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Introduction
+
+We are reading data for the project *U22003*, data from *CEDAR*
+
+# Individual
+
+Reading and saving.
+
+```{r individ}
+individ <- read.table("../Data/U22003/u22003_individ.txt", header = TRUE, sep = ";")
+saveRDS(individ, file = "Data/individ.rds")
+```
+
+# Living
+
+Reading and saving
+
+```{r boende}
+boende <- read.table("../Data/U22003/u22003_boende.txt", header = TRUE, sep = ";")
+saveRDS(boende, file = "Data/boende.rds")
+```
+
+# Summary
+
+Data are saved in rds format in folder *Data*, exact copy of data in *U22003*, no fixing of anything.
+When subsets suitable for analysis are created, they are saved in the folder *Rdata*.
+
