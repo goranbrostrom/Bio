@@ -1,5 +1,7 @@
+Bio.Rproj
 Data
 Rdata
 *.log
 *.tex
 *.pdf
+.Rproj.user
