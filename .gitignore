@@ -5,3 +5,4 @@ Rdata
 *.tex
 *.pdf
 .Rproj.user
+.Rhistory
