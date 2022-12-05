@@ -17,9 +17,9 @@ knitr::opts_chunk$set(echo = FALSE)
 infant <- readRDS("Rdata/infant.rds")
 infant <- infant[infant$sex != 0, ]
 infant$sex <- factor(infant$sex, labels = c("boy", "girl"))
-weq <- with(infant, ((exit < 364.5) & (event == 0)) |
-                (bdupd == 1))
-inf0 <- infant[!weq, ]
+##weq <- with(infant, ((exit < 364.5) & (event == 0)) |
+  ##              (bdupd == 1))
+inf0 <- infant ##[!weq, ]
 g <- function(x) (log(1 + x)) ^ 3
 g0 <- function(x) g(x) * 365 / g(365)
 ```

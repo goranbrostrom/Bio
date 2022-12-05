@@ -49,6 +49,9 @@ building blocks for *episodes* are there in the form of three variables named *e
 (start age of episode), *exit* (end age of episode), and *event* (indicator of death).
 Key covariates are further *birthdate* and *place of birth*.
 
+*Revision December 5, 2022:* Only infants with known birthdate to start with. Infants with incomplete death date are includeed as survivors, provided that it can be established that the 
+infant survived one year of age.
+
 # The individual file
 
 Let's call it *infant*. We first separate the data into *survivors* **(is.na(deathdate))** and
@@ -64,14 +67,14 @@ infant <- data.frame(id = ind$UTTAGSID, sex = ind$KON,
                      outdate = ind$BOSDAT_U, odupd = ind$BOSDAT_IND,
                      uttyp = ind$BOSTYP)
 inf <- infant # Save a copy of the original.
-summary(infant)
+infant <- infant[infant$bdupd < 0.5, ] # Known birthdate.
+##summary(infant)
 infant$birthdate <- as.Date(as.character(infant$birthdate), format = "%Y%m%d")
 infant$deathdate <- as.Date(as.character(infant$deathdate), format = "%Y%m%d")
 infant$outdate <- as.Date(as.character(infant$outdate), format = "%Y%m%d")
 infant$exit <- with(infant, as.numeric(deathdate - birthdate))
 survs <- infant[is.na(infant$deathdate), ]
 deaths <- infant[!is.na(infant$deathdate), ]
-
 ```
 
 ## Survivors
@@ -80,7 +83,9 @@ We need to find a date *last seen* and the corresponding *exposure time*.
 
 ```{r survivors}
 exp.time <- with(survs, as.numeric(outdate - birthdate))
+
 survs$exit <- pmin(exp.time, 365) # Note 'p'!
+survs <- survs[survs$exit > 0.5, ]
 survs$event <- 0
 survs$enter <- 0
 summary(exp.time)
@@ -91,6 +96,7 @@ summary(exp.time)
 ```{r deaths}
 exp.time <- with(deaths, as.numeric(deathdate - birthdate))
 deaths$exit <- exp.time
+deaths <- deaths[(deaths$ddupd < 0.5) | (deaths$exit > 365), ]
 deaths$event <- 1
 deaths$enter <- 0
 deaths <- age.window(deaths, c(0, 365))
