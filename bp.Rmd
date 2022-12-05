@@ -45,10 +45,11 @@ with(rs, plot(risktimes, cumsum(n.events) / n, type = "l", xlab = "Days", ylab =
 
 ```{r gtrans, fig.cap = "Bougeois-Pichat with log-cube transformation."}
 n <- NROW(inf0)
-with(rs, plot(risktimes, cumsum(n.events) / n, type = "l", axes = FALSE))
+with(rs, plot(risktimes, cumsum(n.events) / n, type = "l", axes = FALSE,
+     xlab = "Age (days)", ylab = "CDF", col = "blue"))
 with(rs, lines(g0(risktimes), cumsum(n.events) / n, col = "red"))
 att <- c(0, 30, 60, 120, 240, 365)
-axis(1, at = att)
+axis(1, at = att, col = "blue", labels = att)
 axis(3, at = g0(att), col = "red", labels = att)
 axis(2, las = 1)
 box()
@@ -56,6 +57,7 @@ abline(h = 0)
 abline(v = g0(30), lty = 3, col = "red")
 abline(v = 30, lty = 3)
 abline(h = 0.0255, lty = 3, col = "darkgreen")
+abline(v = 0)
 ```
 
 ## Postneonatal mortality
